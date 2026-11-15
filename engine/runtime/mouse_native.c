@@ -30,6 +30,7 @@
 //    a second host call takes its place and makes it 1 while the mouse is the sensor, so the pitch is the target.
 #include <math.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "cfg.h"
@@ -164,31 +165,41 @@ static void pitch_share(Cpu *c) { set_sreg(c, 1, mouse_native_active() ? 1.0f : 
 // maps are the game's functions, called for the camera's current parameters;
 // nothing of them is copied here. The pitch stops at the pose's own ends (the curve's -1 and 1) and motion past them
 // is dropped, so a turn back moves the view at once; the base is left to the game. When the game moves the pitch
-// itself (the Y recentre or a reset moving the base, a write to the pitch, a jump of the curve's input), the frame
-// takes the curve's result and its excess as the game computed them and the next one aims from the view drawn.
+// itself, the next frame aims from the view drawn: after the Y recentre (a base moved) the frame takes the curve's
+// result and its excess as the game computed them (the game sets them to level); after a write to the pitch, another
+// camera, the setting or the source coming back, or a jump of the curve's input that the virtual controller's own turn
+// does not explain, it hands out the pitch as it is. (The virtual controller follows the view and not the curve, so the
+// curve's result is as far from the view as the two have come apart, up to 42 degrees after a Y. Release 0.3.4 took
+// it in all those frames and also on any change of the curve's input over 30 degrees, a vertical flick of that much in
+// one frame or across a frame hitch: such a flick and its way back left the view 10 to 37 degrees up or down.)
 // Without a measured yaw gain yet, or with the setting off, the curve's result is handed out as it is.
 // A change of the camera itself (squid form and back, another camera blending in) changes the pose's view pitch of an
 // unchanged pitch. The game keeps its pitch through it, so the view a pitch gives comes back with the form. While the
 // pose moves at all, the aim starts again from the view drawn each frame and the game's own move of the view is left
 // alone. A change of form is fast: 22 to 40 frames, the pose of the pitch handed out moving by 0.2 to 3.8 degrees a
 // frame at its height (measured: below level the squid camera maps the pitch about as the human one does, above it to
-// a view about 3.4 times narrower, its top near 16 degrees up). Once the pose of the pitch moves by more than BLEND_IN
+// a view about 3.4 times narrower, its top near 16 degrees up). The pose's view pitch for 65 pitches is taken while the
+// camera holds still (the table), and the last table of a wide camera, whose view rises by WIDE_SPAN at least from the
+// level pitch to the top one (the human form's), is kept (ref). Once the pose of the pitch moves by more than BLEND_IN
 // in a frame, or its slope there changes by more than BLEND_SLOPE of the table's in a frame (at a pitch both cameras
-// put at about the same view, where the pose hardly moves), the mouse's turns go on moving the pitch as the camera
-// before the change did: the pose's view pitch for 65 pitches is taken while the camera holds still (the table), and
-// each turn moves the pitch along that table, at the slope last measured, until the camera holds still again for
-// STEADY_READS frames (at most CHANGE_TABLE_MAX frames). A turn and its way back across the change then cancel on the
-// pitch, as they do in the game with a real controller, whose tilt the pitch follows; meanwhile the view drawn turns
-// by up to 3.4 times more or less than the counts. (Turning along the pose of the moment moved the pitch further for
-// the same counts near the squid camera's top than near the human one's: a small circle across each change moved the
-// pitch by up to 0.14 and 17 changes each way took a level view to 55 degrees up. Leaving the table once the pose
-// moved by less than 0.05 degrees a frame turned the end of such a circle along the squid camera and took a view near
-// the top 30 degrees down over 17 changes. Holding the view instead drove the pitch from 0.48 to 1 and back to 0.83 in
-// one change, and the view jumped by up to 26 degrees on the way back.) A slow change is another camera: climbing a
-// wall moves the pose by at most 0.11 degrees a frame for seconds while its slope changes by a quarter in 16 frames
-// (at most 3% a frame), so there the mouse's turn moves the pose of the moment and each turn moves the view drawn by
-// its counts. The table is taken again once the camera has held still for STEADY_READS frames, or every TABLE_EVERY
-// frames of a slow change.
+// put at about the same view, where the pose hardly moves), each of the mouse's turns moves the pitch along ref, at the
+// slope last measured, until the camera holds still again for STEADY_READS frames (at most CHANGE_TABLE_MAX frames);
+// and so does every turn while the camera is narrow (squid form). The human form's view so ends where the counts put
+// it, whatever form they were made in, and a turn and its way back cancel on the pitch, as they do in the game with a
+// real controller, whose tilt the pitch follows. The squid camera's view turns about 0.85 times the counts below
+// level and about 3.4 times less above it, as with the game's own aiming. (Releases 0.3.3 and 0.3.4 turned the squid
+// camera's view by the counts and, during a change, moved the pitch along the table of the camera before it: a turn up
+// in squid form above level, or one made while the form changed back, then moved the human form's view about 3.4
+// times as far once the form came back, and the camera looked up by itself when the player left squid form: 3 degrees
+// of counts in squid form left the view 8 degrees higher than the counts put it, 12 degrees 31 higher, and 60 counts
+// up in the half second after ZL was let go, 7 to 11 degrees higher. Turning along the pose of the moment moved the
+// pitch further for the same counts near the squid camera's top than near the human one's: a small circle across each
+// change moved the pitch by up to 0.14 and 17 changes each way took a level view to 55 degrees up. Holding the view
+// instead drove the pitch from 0.48 to 1 and back to 0.83 in one change, and the view jumped by up to 26 degrees on
+// the way back.) A slow change is another camera: climbing a wall moves the pose by at most 0.11 degrees a frame for
+// seconds while its slope changes by a quarter in 16 frames (at most 3% a frame); there a turn moves the pose of the
+// moment, so each turn moves the view drawn by its counts, unless the camera is narrow. The table is taken again once
+// the camera has held still for STEADY_READS frames, or every TABLE_EVERY frames of a slow change.
 // The virtual controller's tilt is no longer what the view follows, and motion dropped at a limit or a camera change
 // left the two apart, so over a game the controller drifted to its own limit (mouse_gyro_pitch): there it stopped
 // tilting that way, the pitch no longer answered the mouse in that direction, and past 84 degrees its yaw no longer
@@ -214,6 +225,8 @@ static void pitch_share(Cpu *c) { set_sreg(c, 1, mouse_native_active() ? 1.0f : 
 #define CHANGE_TABLE_MAX 45      // frames of a change of form at most
 #define TABLE_EVERY 8            // frames between two takes of the table while the camera changes slowly
 #define TABLE_N 64               // the table's intervals over the pitch's range
+#define WIDE_SPAN 40.0           // degrees from the level pitch's view to the top pitch's: at least, a wide camera
+                                 // (human form: 67; squid form: 20)
 static volatile float yaw_gain;   // degrees of camera yaw per degree of controller yaw this frame; 0: not seen yet
 // The previous frame's pitch: camera, pitch handed out, curve input and bases; the view pitch aimed at (when aimed),
 // the view pitch drawn for the frame before, the pose's view pitch of that frame's pitch and of the pitch handed out;
@@ -225,16 +238,18 @@ static volatile float yaw_gain;   // degrees of camera yaw per degree of control
 static struct {
     uint64_t cam;
     float out, input, base1, base2;
-    double target, seen, pose, handed, idle, followed, slope, change_slope, ratio;
+    double target, seen, pose, handed, idle, followed, ctrl, slope, change_slope, ratio;
     int valid, aimed, changing, age, still, blend, blended, blend_age, since, cell;
 } pz;
 // The table: the pose's view pitch for pitch -1 + 2 i / TABLE_N, of camera cam as it last held still or changed slowly
-// (ok: taken); check: the entry table_current compares last besides the one nearest the pitch
-static struct {
+// (ok: taken); check: the entry table_current compares last besides the one nearest the pitch. ref: the last table of
+// a wide camera (the human form's), which every turn follows while the camera is narrow or changes form.
+typedef struct {
     double v[TABLE_N + 1];
     uint64_t cam;
     int ok, check;
-} tab;
+} Table;
+static Table tab, ref;
 
 // The view pitch in degrees (up positive) the camera drew in its last frame, from its final view direction.
 static float final_view_pitch(uint64_t cam) {
@@ -299,9 +314,13 @@ static float pitch_for(Cpu *c, uint64_t cam, double want, float n0, double p0) {
 
 static float table_n(int i) { return (float)(-1.0 + 2.0 * i / TABLE_N); }
 
+// A wide camera: from the level pitch to the top one its view rises by WIDE_SPAN at least.
+static int table_wide(const Table *t) { return t->ok && t->v[TABLE_N] - t->v[TABLE_N / 2] >= WIDE_SPAN; }
+
 static void table_take(Cpu *c, uint64_t cam) {
     for (int i = 0; i <= TABLE_N; i++) tab.v[i] = view_pitch(c, cam, table_n(i));
     tab.cam = cam, tab.ok = 1;
+    if (table_wide(&tab)) ref = tab;
 }
 
 // The table's entry nearest pitch n, not an end; the pose's slope over the table's across the two intervals around
@@ -326,25 +345,25 @@ static int table_current(Cpu *c, uint64_t cam, float n) {
            fabs(view_pitch(c, cam, table_n(j)) - tab.v[j]) <= POSE_MOVED;
 }
 
-// The table's view pitch for pitch n, and the pitch for view pitch v (the view pitch rises with the pitch; past either
+// A table's view pitch for pitch n, and the pitch for view pitch v (the view pitch rises with the pitch; past either
 // end, that end), both straight between the entries, so one undoes the other.
-static double table_view(double n) {
+static double table_view(const Table *t, double n) {
     double x = (n + 1.0) * (TABLE_N / 2.0);
     int i = x <= 0 ? 0 : x >= TABLE_N - 1 ? TABLE_N - 1 : (int)x;
-    return tab.v[i] + (tab.v[i + 1] - tab.v[i]) * (x - i);
+    return t->v[i] + (t->v[i + 1] - t->v[i]) * (x - i);
 }
 
-static double table_pitch(double v) {
-    if (v <= tab.v[0]) return -1;
-    if (v >= tab.v[TABLE_N]) return 1;
+static double table_pitch(const Table *t, double v) {
+    if (v <= t->v[0]) return -1;
+    if (v >= t->v[TABLE_N]) return 1;
     int lo = 0, hi = TABLE_N;
     while (hi - lo > 1) {
         int m = (lo + hi) / 2;
-        if (tab.v[m] <= v) lo = m;
+        if (t->v[m] <= v) lo = m;
         else hi = m;
     }
-    double d = tab.v[hi] - tab.v[lo];
-    return -1.0 + 2.0 * (lo + (d > 0 ? (v - tab.v[lo]) / d : 0)) / TABLE_N;
+    double d = t->v[hi] - t->v[lo];
+    return -1.0 + 2.0 * (lo + (d > 0 ? (v - t->v[lo]) / d : 0)) / TABLE_N;
 }
 
 // In place of the camera's `bl` to its pitch curve (main+0x28f7560 and +0x28f7660): s0 the motion sensitivity, s1 the
@@ -359,19 +378,55 @@ static void pitch_curve(Cpu *c) {
     rt_call(c, ldr_module(0)->base + s3->pitch_curve, 3, c->x[0], c->x[1], c->x[2]);
     float game = sreg(c, 0), out = game;
     int on = mouse_native_active() && yaw_gain > 0 && pose_out, keep = mgb_native_keep(1);
-    dbg.game = game, dbg.resync = 1, dbg.gain = yaw_gain;
+    dbg.game = game, dbg.resync = 1, dbg.gain = yaw_gain, dbg.flags = 0, dbg.latent = 0, dbg.calls++;
+    dbg.base1 = base1, dbg.base2 = base2, dbg.ctrl = (float)pitch_at_read;
     if (on) {
         float now;
         memcpy(&now, (const void *)(uintptr_t)(cam + CAMERA_PITCH), sizeof now);
         // the change of the curve's input since the previous frame, less the virtual controller's turns that followed
         // the view (they are no mouse motion)
         double followed = followed_at_read, step = (double)input - pz.input - (followed - pz.followed);
-        int resync = !pz.valid || pz.cam != cam || fabsf(now - pz.out) > 1e-5f || base1 != pz.base1 ||
-                     base2 != pz.base2 || fabs(step) > 30;
+        // A jump of the curve's input that the virtual controller's own turn does not explain (the mouse's: its pitch
+        // change less the follow's): a reset of the game's sensor processing. A mouse turn of any size is motion.
+        // 0.3.4 took any change over 30 degrees for one, so a vertical flick of that much in a frame (750 counts at
+        // 0.04 degrees per count, or fewer counts over a frame hitch) resynced.
+        double own = pitch_at_read - pz.ctrl - (followed - pz.followed);
+        int hold = mgb_native_hold(1);
+        int jump = pz.valid && (hold ? fabs(step - own) > 30 : fabs(step) > 30);
+        int why = (!pz.valid ? MOUSE_NATIVE_NEW : 0) | (pz.valid && pz.cam != cam ? MOUSE_NATIVE_CAMERA : 0) |
+                  (pz.valid && fabsf(now - pz.out) > 1e-5f ? MOUSE_NATIVE_WRITTEN : 0) |
+                  (pz.valid && (base1 != pz.base1 || base2 != pz.base2) ? MOUSE_NATIVE_BASE : 0) |
+                  (jump ? MOUSE_NATIVE_JUMP : 0);
+        int resync = why != 0;
         double seen = final_view_pitch(cam);
+        dbg.flags = why, dbg.now = now, dbg.step = (float)step, dbg.seen = (float)seen;
         if (!pz.valid) pz.changing = pz.blend = pz.blended = 0;
         if (resync) {
             pz.aimed = 0;
+            // Only the game's recentre (a base moved) takes the curve's result. Otherwise the pitch stays as it is: the
+            // virtual controller follows the view and not the curve, so the curve's result is as far from the view as
+            // the two have come apart (measured: up to 42 degrees after a Y), which 0.3.4 turned the view by.
+            if (hold && !(why & MOUSE_NATIVE_BASE)) {
+                out = now;
+                float zero = 0;
+                memcpy((void *)(uintptr_t)excess_at, &zero, sizeof zero);
+                // One log line per such frame, the first 16 and then one in 256 (a player's log shows where the game
+                // moves the pitch itself): what moved it and how far the curve's result was from the view kept.
+                static unsigned kept;
+                if (why != MOUSE_NATIVE_NEW && (kept < 16 || kept % 256 == 0)) {
+                    static const struct { int bit; const char *what; } names[] = {
+                        {MOUSE_NATIVE_CAMERA, "another camera"}, {MOUSE_NATIVE_WRITTEN, "the game's write"},
+                        {MOUSE_NATIVE_JUMP, "a jump of the curve's input"}, {MOUSE_NATIVE_NEW, "a restart"}};
+                    char list[120] = "";
+                    for (size_t i = 0; i < sizeof names / sizeof *names; i++)
+                        if (why & names[i].bit)
+                            snprintf(list + strlen(list), sizeof list - strlen(list), "%s%s", list[0] ? ", " : "",
+                                     names[i].what);
+                    rt_log("mouse native: pitch kept through %s (the curve's result %+.1f degrees of view away)", list,
+                           view_pitch(c, cam, game) - view_pitch(c, cam, now));
+                }
+                if (why != MOUSE_NATIVE_NEW) kept++;
+            }
         } else {
             // The view drawn last frame for the current pitch and the pose's view pitch for it. When the pose's view
             // pitch for that pitch is not the one it had when the pitch was handed out, the camera itself changed (a
@@ -399,17 +454,28 @@ static void pitch_curve(Cpu *c) {
             }
             if (pz.since < TABLE_EVERY) pz.since++;
             if (keep && !pz.blend && (!pz.changing || (pz.age >= TABLE_EVERY && pz.since >= TABLE_EVERY)) &&
-                !table_current(c, cam, now))
+                !table_current(c, cam, now)) {
                 table_take(c, cam), pz.since = 0, pz.ratio = 1, pz.cell = table_near(now);
-            if (pz.blend) {
-                // the turn moves the pitch along the table, at the slope the camera had before the change; the aim is
-                // the view drawn next, for the follow
-                double turn = (double)yaw_gain * step / (1 + pz.change_slope);
-                out = step != 0 ? (float)table_pitch(table_view(now) + turn) : now;
+                dbg.flags |= MOUSE_NATIVE_TABLE;
+            }
+            // The table a turn follows while the camera changes form or is narrow (squid form): the wide camera's, so
+            // a turn made in squid form or while the form changes moves the human form's view by its counts.
+            int use_ref = keep && mgb_native_ref(1) && ref.ok && ref.cam == cam;
+            const Table *bt = use_ref ? &ref : &tab;
+            int narrow = use_ref && !pz.blend && tab.ok && tab.cam == cam && !table_wide(&tab);
+            dbg.flags |= (pz.changing ? MOUSE_NATIVE_CHANGING : 0) | (pz.blend ? MOUSE_NATIVE_BLEND : 0) |
+                         (narrow ? MOUSE_NATIVE_NARROW : 0);
+            if (pz.blend || narrow) {
+                // the turn moves the pitch along the table (during a change of form at the slope the camera had
+                // before it); the aim, for the follow, is the wide camera's view of the pitch handed out, or the view
+                // drawn next
+                double turn = (double)yaw_gain * step / (pz.blend ? 1 + pz.change_slope : 1);
+                out = step != 0 ? (float)table_pitch(bt, table_view(bt, now) + turn) : now;
                 pz.handed = out == now ? p0 : view_pitch(c, cam, out);
-                pz.aimed = 0, pz.slope = 0, pz.target = seen + (pz.handed - p0);
+                pz.aimed = 0, pz.slope = 0;
+                pz.target = use_ref ? table_view(&ref, out) : seen + (pz.handed - p0);
                 dbg.view = (float)p0, dbg.want = (float)pz.handed, dbg.target = (float)pz.target, dbg.slope = 0;
-                dbg.resync = 3;
+                dbg.resync = pz.blend ? 3 : 4;
             } else {
                 if (pz.changing) pz.aimed = 0, dbg.resync = 2;
                 // How the offset between the two moved since the previous frame: per degree of the pose's when that
@@ -439,8 +505,9 @@ static void pitch_curve(Cpu *c) {
                     out = pitch_for(c, cam, want, now, p0);
                     pz.handed = view_pitch(c, cam, out);
                     if (out <= -1.0f || out >= 1.0f)   // at a limit: the motion past it is dropped
-                        pz.target = seen + (pz.handed - p0) * (1 + slope);
+                        pz.target = seen + (pz.handed - p0) * (1 + slope), dbg.flags |= MOUSE_NATIVE_LIMIT;
                 }
+                if (pinned) dbg.flags |= MOUSE_NATIVE_PINNED;
                 dbg.view = (float)p0, dbg.want = (float)want, dbg.target = (float)pz.target, dbg.slope = (float)slope;
                 if (dbg.resync == 1) dbg.resync = 0;
             }
@@ -453,9 +520,13 @@ static void pitch_curve(Cpu *c) {
         // into its own limit while the view is elsewhere: the turn asked for is what is left between the two after this
         // frame (the aim includes the frame's mouse turn, as the controller's pitch at the read does).
         if (keep) input_mouse_gyro_follow((resync ? seen : pz.target) / yaw_gain - pitch_at_read);
+        // the bench: how far the view would move in a frame that took the curve's result instead (a resync)
+        if (mgb_on()) dbg.latent = (float)(view_pitch(c, cam, game) - pz.handed);
         pz.cam = cam, pz.out = out, pz.input = input, pz.base1 = base1, pz.base2 = base2, pz.valid = 1;
+        pz.ctrl = pitch_at_read;
     } else {
         pz.valid = 0;
+        dbg.flags = MOUSE_NATIVE_OFF;
     }
     pz.followed = followed_at_read;
     dbg.out = out;

@@ -1169,14 +1169,17 @@ static double mouse_gyro_prepare(MouseGyroCfg *cfg, uint64_t now) {
     int key = mg_key != KEY_NONE && ikb_foreground() && ikb_down(mg_key);
     int recenter = (key && !mg_key_prev) | (int)__atomic_exchange_n(&mg_recenter_req, 0, __ATOMIC_RELAXED);
     mg_key_prev = key;
+    // mg.followed: a running total mouse_native.c reads, of the controller's pitch turns that are no mouse motion. It
+    // goes on across a restart, and the restart's and the recentre's levelling count in it, so the linear pitch takes
+    // neither for a turn of the mouse.
     if (__atomic_exchange_n(&mg_restart_req, 0, __ATOMIC_RELAXED)) {
-        double followed = mg.followed;   // a running total mouse_native.c reads: it goes on across a restart
+        double followed = mg.followed - mg.pitch * 180.0 / M_PI;
         mgyro_reset(&mg, cfg->upright);
         mg.followed = followed;
         motion_restart(mg_fusion);
         mg_last_push = 0;
     }
-    if (recenter) mgyro_recenter(&mg);
+    if (recenter) mg.followed -= mg.pitch * 180.0 / M_PI, mgyro_recenter(&mg);
     double dt = mg_last_push && now > mg_last_push ? (double)(now - mg_last_push) / 1e9 : MG_REST_NS / 1e9;
     return dt > 0.1 ? 0.1 : dt;
 }
