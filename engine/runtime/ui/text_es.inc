@@ -308,6 +308,7 @@
     [UI_KEY_RCTRL] = "Ctrl derecha", [UI_KEY_LALT] = "Alt", [UI_KEY_CAPSLOCK] = "Bloq Mayús", [UI_KEY_INSERT] = "Insert",
     [UI_KEY_DELETE] = "Supr", [UI_KEY_HOME] = "Inicio", [UI_KEY_END] = "Fin", [UI_KEY_PAGEUP] = "Re Pág",
     [UI_KEY_PAGEDOWN] = "Av Pág", [UI_KEY_NUM_FMT] = "Num %s",
+    [UI_KEY_WHEEL_UP] = "Rueda arriba", [UI_KEY_WHEEL_DOWN] = "Rueda abajo",
     [UI_PAD_SOUTH] = "Botón inferior", [UI_PAD_EAST] = "Botón derecho", [UI_PAD_WEST] = "Botón izquierdo",
     [UI_PAD_NORTH] = "Botón superior", [UI_PAD_LSTICK] = "Palanca izquierda", [UI_PAD_RSTICK] = "Palanca derecha",
     [UI_PAD_L] = "Botón superior izquierdo", [UI_PAD_R] = "Botón superior derecho", [UI_PAD_START] = "Inicio", [UI_PAD_BACK] = "Atrás",

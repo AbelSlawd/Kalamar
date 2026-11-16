@@ -62,7 +62,7 @@ A Splatoon 3 build (`rt_target.family`) starts from a PC shooter's layout instea
 | D-pad left, up, right, down | arrow keys | signals: up "This way!", down "Booyah!" |
 | Right stick | I J K L | the camera while the game's motion controls are off |
 
-The mouse wheel is unbound. Menus work with W A S D or the arrows, F and Space; the mouse does not point at menu items (the game's touch screen is not mapped, and the TotK menu cursor does not apply).
+The mouse wheel is unbound by default; `wheel_up` and `wheel_down` bind it like keys ("Remapping"). Menus work with W A S D or the arrows, F and Space; the mouse does not point at menu items (the game's touch screen is not mapped, and the TotK menu cursor does not apply).
 
 Spectating a private battle (a spectator's seat, [auto-match.md](auto-match.md), "Spectators"): the game's camera directs itself until a player is picked. Measured with the gamepad buttons: hold Left Shift (ZL) to see which button follows which player (the arrow keys for Alpha's players, F for Bravo's first), hold that key about half a second to follow the player, hold Z (L) for the top-down view, Tab or M (X) for the map. Short taps did nothing, on the pad as on the keyboard; with the keyboard only the map (Tab, M) was seen working, the held keys were not tried.
 
@@ -228,7 +228,7 @@ The *Controls* tab of the settings menu lists, under the button layout, every Sw
 The tab writes `totk.ini` lines, one per Switch button or stick direction: `bind_<button> = <entry>, <entry>, ...`. The button is `A B X Y L R ZL ZR PLUS MINUS LEFT UP RIGHT DOWN LCLICK RCLICK`, or a stick direction `LSTICK_LEFT LSTICK_UP LSTICK_RIGHT LSTICK_DOWN` (movement, W A S D by default) and `RSTICK_...` (camera, the arrow keys), or `SHAKE` (keys only, G by default). An entry is `pad:<name>` or `key:<name>`:
 
 - pad names: `south east west north l r zl zr start back lstick rstick dpad_left dpad_up dpad_right dpad_down lpaddle1 rpaddle1 lpaddle2 rpaddle2` (`zl`, `zr` are the triggers; the paddles are the back buttons of an Xbox Elite, DualSense Edge or Steam Controller, upper pair 1, lower pair 2, and no Switch button has them by default)
-- key names: `a` to `z`, `0` to `9`, `f2` to `f7`, `f9`, `f12`, `num0` to `num9`, `space tab enter backspace lshift rshift lctrl rctrl lalt capslock insert delete home end pageup pagedown up down left right`, `num_add num_sub num_mul num_div num_decimal`, `minus equals lbracket rbracket semicolon apostrophe comma period slash backslash grave`, `mouse_l mouse_r mouse_m mouse_x1 mouse_x2`
+- key names: `a` to `z`, `0` to `9`, `f2` to `f7`, `f9`, `f12`, `num0` to `num9`, `space tab enter backspace lshift rshift lctrl rctrl lalt capslock insert delete home end pageup pagedown up down left right`, `num_add num_sub num_mul num_div num_decimal`, `minus equals lbracket rbracket semicolon apostrophe comma period slash backslash grave`, `mouse_l mouse_r mouse_m mouse_x1 mouse_x2`, `wheel_up wheel_down` (the scroll wheel, away from you and towards you: each notch is one short press of the button, so it suits a press like the jump and not a hold like shooting; on the map the wheel zooms instead. The Controls tab shows such a binding but cannot capture the wheel: write the line, or bind it in the launcher)
 - `key:default` and `pad:default` keep that part's defaults (`pad:default` is each layout's own button).
 - `none` leaves the button unbound.
 

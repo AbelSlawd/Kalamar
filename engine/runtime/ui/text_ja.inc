@@ -263,6 +263,7 @@
     [UI_KEY_RCTRL] = "右Ctrl", [UI_KEY_LALT] = "Alt", [UI_KEY_CAPSLOCK] = "Caps Lock", [UI_KEY_INSERT] = "Insert",
     [UI_KEY_DELETE] = "Delete", [UI_KEY_HOME] = "Home", [UI_KEY_END] = "End", [UI_KEY_PAGEUP] = "Page Up",
     [UI_KEY_PAGEDOWN] = "Page Down", [UI_KEY_NUM_FMT] = "テンキー %s",
+    [UI_KEY_WHEEL_UP] = "ホイール上", [UI_KEY_WHEEL_DOWN] = "ホイール下",
     [UI_PAD_SOUTH] = "下ボタン", [UI_PAD_EAST] = "右ボタン", [UI_PAD_WEST] = "左ボタン",
     [UI_PAD_NORTH] = "上ボタン", [UI_PAD_LSTICK] = "左スティック", [UI_PAD_RSTICK] = "右スティック",
     [UI_PAD_L] = "左バンパー", [UI_PAD_R] = "右バンパー", [UI_PAD_START] = "スタート", [UI_PAD_BACK] = "バック",

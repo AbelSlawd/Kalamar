@@ -138,7 +138,8 @@ impl GameHost for TauriHost {
             return Default::default();
         }
         let p = crate::profile::load_profile(&st.data_dir);
-        crate::profile::GEAR_PARTS.iter().filter_map(|part| p.main_abilities.part(part).map(|s| (part.to_string(), s.clone()))).collect()
+        // Never the Splatfest-only ability (a choice kept from an earlier launcher): the engine does not take it.
+        crate::profile::GEAR_PARTS.iter().filter_map(|part| p.main_abilities.part(part).filter(|s| s.as_str() != crate::game::catalogue::FEST_ONLY_ABILITY).map(|s| (part.to_string(), s.clone()))).collect()
     }
 }
 
