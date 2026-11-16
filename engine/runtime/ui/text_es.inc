@@ -441,6 +441,7 @@
     [UI_MENU_OV_FPS] = "%.0f FPS", [UI_MENU_OV_FRAME_MS] = "%.1f ms", [UI_MENU_OV_GAME_PCT] = "juego %.0f%%",
     [UI_MENU_OV_MAX_MS] = "máx. %.1f ms",
     [UI_MENU_OV_FPS_LABEL] = "FPS", [UI_MENU_OV_FRAME_LABEL] = "Fotograma", [UI_MENU_OV_FMT_FPS] = "%.0f",
+    [UI_MENU_OV_SHOWN_LABEL] = "Mostradas", [UI_MENU_OV_FMT_FACTOR] = "x%.0f",
     [UI_MENU_OV_LOW1] = "1%% bajo %.0f", [UI_MENU_OV_LOW01] = "0.1%% bajo %.0f",
     [UI_MENU_OV_GPU] = "GPU", [UI_MENU_OV_CPU] = "CPU", [UI_MENU_OV_RAM] = "RAM", [UI_MENU_OV_VRAM] = "VRAM",
     [UI_MENU_OV_TEMP] = "Temperatura", [UI_MENU_OV_POWER] = "Potencia", [UI_MENU_OV_CLOCK] = "Reloj",
