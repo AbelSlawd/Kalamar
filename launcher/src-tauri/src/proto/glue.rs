@@ -141,6 +141,9 @@ impl GameHost for TauriHost {
         // Never the Splatfest-only ability (a choice kept from an earlier launcher): the engine does not take it.
         crate::profile::GEAR_PARTS.iter().filter_map(|part| p.main_abilities.part(part).filter(|s| s.as_str() != crate::game::catalogue::FEST_ONLY_ABILITY).map(|s| (part.to_string(), s.clone()))).collect()
     }
+    fn applies_profile(&self) -> bool {
+        self.0.state::<crate::commands::AppState>().config.lock().unwrap_or_else(|p| p.into_inner()).apply_profile
+    }
 }
 
 impl TauriHost {
@@ -811,6 +814,16 @@ pub const KNOWN_FIELD_TYPES: &[&str] = &["string", "integer", "boolean", "enum",
 pub async fn proto_pick_loadout(app: AppHandle, hub: State<'_, Hub>, server: String, match_id: String, picks: std::collections::HashMap<String, String>) -> R<()> {
     let picks = picks.into_iter().filter(|(k, v)| crate::proto::contract::SLOTS.contains(&k.as_str()) && (1..=64).contains(&v.len())).collect();
     conn(&hub, &app, &server)?.runner.pick_loadout(&match_id, picks);
+    Ok(())
+}
+
+/// The player is ready during the window to change weapon before a launch (runner phase `weapon`): the launch goes on.
+#[tauri::command]
+pub async fn proto_weapon_ready(app: AppHandle, hub: State<'_, Hub>, server: String, match_id: String) -> R<()> {
+    if match_id.is_empty() || match_id.len() > 128 {
+        return Err(Fail::new("invalid_input", "bad_request", "unknown match"));
+    }
+    conn(&hub, &app, &server)?.runner.weapon_ready(&match_id);
     Ok(())
 }
 
