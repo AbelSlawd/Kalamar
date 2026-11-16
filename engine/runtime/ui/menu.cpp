@@ -686,7 +686,8 @@ static void row_fps_limit() {
     }
     const char *set = cfg_get("TOTK_FPS_LIMIT"), *old = cfg_get("TOTK_FPS60");
     int cur = (!set || !*set) && old && !strcmp(old, "0") ? 0 : -1;
-    opt_choice_list("TOTK_FPS_LIMIT", UI_MENU_FPS_LIMIT, use_vals, names, N, UI_MENU_FPS_LIMIT_DESC, cur);
+    opt_choice_list("TOTK_FPS_LIMIT", UI_MENU_FPS_LIMIT, use_vals, names, N,
+                    ink::on ? UI_MENU_FPS_LIMIT_DESC_GEN : UI_MENU_FPS_LIMIT_DESC, cur);
 }
 
 // The menu's name of a TOTK_VK_PRESENT mode (gfx_window_present_mode); NULL for another.

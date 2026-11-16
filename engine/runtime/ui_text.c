@@ -173,6 +173,7 @@ static const char *const text_en[UI_TEXT_COUNT] = {
     [UI_MENU_FXAA_DESC] = "The game's own FXAA edge smoothing. It blurs fine detail a little; with DLAA on it is not needed.",
 
     [UI_MENU_FPS_LIMIT] = "Frame rate limit",
+    [UI_MENU_FPS_LIMIT_DESC_GEN] = "The most pictures per second on the screen. The game itself stays at 60 frames a second; above 60, pictures made from its frames are shown in between (frame generation), which adds a few milliseconds of delay.",
     [UI_MENU_FPS_LIMIT_DESC] = "The most frames per second the game draws. Above 60 is experimental and needs Game speed "
                                "follows the clock.",
     [UI_MENU_FPS_30] = "30 FPS", [UI_MENU_FPS_40] = "40 FPS", [UI_MENU_FPS_45] = "45 FPS",
@@ -661,6 +662,7 @@ static const char *const text_ru[UI_TEXT_COUNT] = {
     [UI_MENU_FXAA_DESC] = "Собственное сглаживание FXAA. Слегка размывает мелкие детали; с DLAA оно не нужно.",
 
     [UI_MENU_FPS_LIMIT] = "Ограничение частоты кадров",
+    [UI_MENU_FPS_LIMIT_DESC_GEN] = "Наибольшее число кадров в секунду на экране. Сама игра остаётся на 60 кадрах в секунду; выше 60 между её кадрами показываются промежуточные (генерация кадров), что добавляет несколько миллисекунд задержки.",
     [UI_MENU_FPS_LIMIT_DESC] = "Наибольшее число кадров в секунду. Выше 60 — экспериментальный режим, нужна «Скорость "
                                "игры по часам».",
     [UI_MENU_FPS_30] = "30 FPS", [UI_MENU_FPS_40] = "40 FPS", [UI_MENU_FPS_45] = "45 FPS",
@@ -1107,6 +1109,7 @@ static const char *const text_pt_br[UI_TEXT_COUNT] = {
     [UI_MENU_SHARPNESS_DESC] = "Aumento de nitidez após a ampliação do FSR; 0 desliga.",
 
     [UI_MENU_FPS_LIMIT] = "Limite de quadros",
+    [UI_MENU_FPS_LIMIT_DESC_GEN] = "O máximo de imagens por segundo na tela. O jogo continua a 60 quadros por segundo; acima de 60, imagens criadas a partir dos quadros do jogo são mostradas entre eles (geração de quadros), o que acrescenta alguns milissegundos de atraso.",
     [UI_MENU_FPS_LIMIT_DESC] = "O máximo de quadros por segundo que o jogo desenha. Acima de 60 é experimental e "
                                "precisa de Velocidade do jogo pelo relógio.",
     [UI_MENU_FPS_30] = "30 FPS", [UI_MENU_FPS_40] = "40 FPS", [UI_MENU_FPS_45] = "45 FPS",
@@ -1663,6 +1666,7 @@ static const char *const text_zh_hans[UI_TEXT_COUNT] = {
     [UI_MENU_COLOR_GAMMA] = "伽马",
     [UI_MENU_COLOR_GAMMA_DESC] = "小于 1 提亮暗部与中间调，大于 1 压暗；1 表示不调整。",
     [UI_MENU_FPS_LIMIT] = "帧率上限",
+    [UI_MENU_FPS_LIMIT_DESC_GEN] = "屏幕每秒显示的最高画面数。游戏本身保持每秒 60 帧；高于 60 时，会在游戏帧之间显示由这些帧生成的画面（帧生成），这会增加几毫秒的延迟。",
     [UI_MENU_FPS_LIMIT_DESC] = "游戏每秒绘制的最高帧数。高于 60 帧为实验性功能，"
                                "需要开启“游戏速度跟随时钟”。",
     [UI_MENU_FPS_30] = "30 FPS",

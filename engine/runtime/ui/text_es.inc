@@ -136,6 +136,7 @@
     [UI_MENU_FXAA_DESC] = "El suavizado de bordes FXAA propio del juego. Difumina un poco el detalle fino; con DLAA activado no hace falta.",
 
     [UI_MENU_FPS_LIMIT] = "Límite de fotogramas",
+    [UI_MENU_FPS_LIMIT_DESC_GEN] = "El máximo de imágenes por segundo en pantalla. El juego sigue a 60 fotogramas por segundo; por encima de 60 se muestran entre ellos imágenes creadas a partir de sus fotogramas (generación de fotogramas), lo que añade unos milisegundos de retraso.",
     [UI_MENU_FPS_LIMIT_DESC] = "El máximo de fotogramas por segundo que dibuja el juego. Por encima de 60 es experimental y "
                                "requiere que la velocidad del juego siga el reloj.",
     [UI_MENU_FPS_30] = "30 FPS", [UI_MENU_FPS_40] = "40 FPS", [UI_MENU_FPS_45] = "45 FPS",
