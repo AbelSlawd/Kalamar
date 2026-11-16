@@ -1607,12 +1607,20 @@ static int join_session(uint64_t end) {
 static int to_stage(uint32_t period_ms, uint64_t end) {
     int32_t v0 = LOAD(seq_vss);
     uint64_t next = 0, worst = 0, told = 0;
+    unsigned presses = 0;
     while (before(end)) {
         if (LOAD(seq_vss) > v0) {
             rt_log("automatch: longest silence of a member in the room: %.1f s", worst / 1000.0);
             return 1;
         }
-        if (plat_now_ms() >= next) press("A"), next = plat_now_ms() + period_ms;
+        if (plat_now_ms() >= next) {
+            // Measured: from the second round a guest waits in the room's free roam, where the pre-match "A OK!" does
+            // not take A (it jumps) and the match started only at the game's 90 s countdown; L opens the match menu,
+            // where A confirms as at the first round
+            press(role == JOIN && round_no > 1 && !(presses & 1) ? "L" : "A");
+            presses++;
+            next = plat_now_ms() + period_ms;
+        }
         uint64_t silent = 0;
         members_present(&silent);
         if (role == JOIN) silent = host_silent_ms();

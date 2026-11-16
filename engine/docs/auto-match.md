@@ -492,7 +492,11 @@ line appended to the command file (only lines appended after the game started co
   round, then ready, teams (a round starts from the last round's teams: they are written again), start. Guest: back
   from a match it stands in the lobby, where A does not confirm the pre-match screen (the game would then start
   the match only at the end of its own countdown, 90 s after the host's "Teams OK"); L and A open the room as at the
-  first round, then A at the pre-match screen. The window is shown again at the next intro.
+  first round, then A at the pre-match screen. When the guest is still in the room's free roam at the pre-match
+  screen, its "A OK!" does not take A (A jumps there), so from the second round a guest alternates L (the match menu)
+  and A at the pre-match screen: A confirms in the match menu as at the first round. Measured with two games on one
+  PC (relay mode, 60 frames a second): without it every later round measured waited for the 90 s countdown (6 of 6),
+  with it the stage loaded 7 to 9 s after the host's "Teams OK" (3 of 3). The window is shown again at the next intro.
 - `quit`: the window stays hidden and the game closes (exit code 0).
 
 Each round's result file has `"round": <n>`; its timeline has the time from the `next` command to the round's intro
@@ -501,7 +505,7 @@ Each round's result file has `"round": <n>`; its timeline has the time from the 
 The room screen's update also runs in a guest's lobby, so it is not the end of a guest's result screens: a guest
 presses A through its result screens for 20 s once they advance (`GUEST_RESULTS_MS`), then opens the room with L and
 A at the next round. A round in the same room reaches its intro about 20 s after the `next` command, against about
-50 s from a game's start.
+50 s from a game's start (37 s measured with two games on one PC, both games' rounds included).
 
 ## The result
 
