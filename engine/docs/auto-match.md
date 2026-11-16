@@ -356,7 +356,7 @@ whose effect does not follow:
 | host: teams | none: each row's team written into the save at the room screen's commit, before the team screen opens on them | read back from the save |
 | host: ready | once the lobby's menu is on its room (state 8) and the room screen has shown its state (`+0x14`) for 60 frames: `Down`, `Down`, `A`, again after 180 frames while the state does not change (a screen back after a match ignores presses during its entry) | the state changes: the game's check of the player list |
 | host: team screen | none | the room screen's state is the team screen's (7) and has been for 30 frames ([Slow machines](#slow-machines)) |
-| host: teams OK | `Down` once per row and once more, `A`, again after 180 frames while the team screen stays | the team screen is left; every asked row has its team in the room |
+| host: teams OK | `Down` once per row and once more (12 frames apart), `A`, again after 180 frames while the team screen stays | the team screen is left; every asked row has its team in the room |
 | guest: a session | `X` (search again, 1 s after the last search ended) until one answers | a datagram on 35000 from another address starting with byte 1 (an answer; a search starts with 0), then the search's end |
 | guest: join | `A`, then once the session's dialog runs `A` until the lobby's sequence joins (state 20) | the library's network restarts |
 | pre-match | `A` every 0.5 s (host) / 1 s (guest) while the lobby's menu is on its room or its private battle, `L` while it is closed; without its offsets `A` every 2.5 s (host) / 3 s (guest) | the stage's scene pack opens (all of them open once at boot; this is the second time) |
@@ -428,7 +428,10 @@ set, the cursor on the second row and "Teams OK" not taken. Late input and input
 the game in the same frames with them off, and the check outlasts the 3 s the same way.
 
 Every step of the room screen now waits for the screen's own state, and its presses are spaced in the game's frames
-(`press_paced`: each press held 6 frames, the next one 48 frames later on the room, 30 on the team screen):
+(`press_paced`: each press held 6 frames, the next one 48 frames later on the room, 12 on the team screen: measured,
+3 runs of 3 `Down`s at 12 taken, "Teams OK" 1.0 s after the team screen opened instead of 2.1 s at 30; with 8 players
+its 9 `Down`s take 1.8 s instead of 4.5 s at 60 frames a second, and twice that on a host at 30; an `Up` on the first
+row does not wrap to "Teams OK"):
 
 - "ready": once the room screen has shown its state for 60 frames; again after 180 frames without a change;
 - the team screen: the flow waits for its state and 30 frames in it, however long the check lasts;

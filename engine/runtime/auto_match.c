@@ -81,7 +81,6 @@ static char match_id[65] = "none", result_path[512], status_path[512], shots_dir
             self_name[64];
 static uint64_t main_base, t0_ms;
 static double t0_unix;   // wall clock (UTC seconds) at t0_ms, so a launcher can relate the timeline to its own clock
-
 // Teams by name (SPLAT3_MATCH_RULES teams=<name>:<A|B|->,...): relay mode, where the relay names each member
 static struct { char name[33]; char team; } by_name[10];   // the room has 10 places (8 players, 2 spectators)
 static int nby_name;
@@ -1592,6 +1591,7 @@ static int ui_leaves(int s, int64_t frames, uint32_t max_ms) {
 #define READY_IDLE 60      // frames the room screen shows its state before "ready" is pressed
 #define TEAMS_IDLE 30      // frames the team screen shows before its first press
 #define RETRY_FRAMES 180   // frames without the step's effect before its presses are made again
+#define TEAMS_DOWN_TICKS 12   // between two Downs on the team screen (30 before: 4.5 s for 8 players, now 1.8 s)
 #define STEP_MAX_MS 60000  // wall-clock bound of each wait (a machine at 5 frames a second still counts 300 frames)
 static int in_session = 2;   // the host's room when it starts the match: players, or fewer when spectators did not come
 static int host_setup(char *why, size_t cap) {
@@ -1645,7 +1645,9 @@ static int host_setup(char *why, size_t cap) {
     int left = 0;
     for (int attempt = 0; attempt < 3 && !left; attempt++) {
         if (attempt) rt_log("automatch: +%.1f s \"Teams OK\" not taken after %d frames: again", now_s(), RETRY_FRAMES);
-        for (int r = 0; r <= in_session && r < 11; r++) press_paced("DOWN", 30);
+        // Measured: the team screen takes Downs 12 ticks apart (each held 6), 3 runs of 3; Up on the first row does
+        // not wrap to "Teams OK"
+        for (int r = 0; r <= in_session && r < 11; r++) press_paced("DOWN", TEAMS_DOWN_TICKS);
         shot("teams-set");
         press("A");   // "Teams OK"
         left = ui_leaves(UI_TEAM_SCREEN, RETRY_FRAMES, STEP_MAX_MS);
