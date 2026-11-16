@@ -165,6 +165,7 @@ void vk_color_release(void);   // before the device goes away
 int vk_framegen_factor(void);
 int vk_framegen_pictures(uint64_t period_ns);
 int vk_framegen_extrapolates(void);
+void vk_framegen_hold(int on);    // 1: no generated pictures for now (the game misses its frame rate); any thread
 int vk_framegen_ingest(VkImage src, VkFormat fmt, int w, int h, const int crop[4]);
 void vk_framegen_present(int id, float tau);
 void vk_framegen_release(void);   // before the device goes away

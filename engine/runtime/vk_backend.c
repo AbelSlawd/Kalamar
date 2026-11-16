@@ -135,6 +135,36 @@ static uint64_t present_generated(int id, uint64_t at, uint64_t period, int k) {
     return shown;
 }
 
+// Frame generation must never cost game frames: the game steps one tick a frame, so a frame rate under 60 is slow
+// motion. queued is when the game presented this frame. While pictures are generated and the game's frame interval,
+// smoothed over about 16 frames with each interval counted as 33 ms at most (one long frame, a shader's first use, is
+// not a slow game), stays above 18 ms (under 55.5 fps), generation is held for 5 s, then tried again; each new hold
+// within 30 s of the last one's end doubles its length, up to 80 s. A game that is slow without generation stays held
+// until it is back at its rate. Present thread only.
+static void hold_generation(uint64_t queued) {
+    static uint64_t last, ema = 1000000000ull / 60, until, resumed, length = 5000000000ull;
+    static int held;
+    if (last && queued > last) {
+        uint64_t d = queued - last;
+        if (d > 33000000) d = 33000000;
+        ema = (ema * 15 + d) / 16;
+    }
+    last = queued;
+    int slow = ema > 18000000;
+    if (!held) {
+        if (!slow || vk_framegen_factor() < 2) return;
+        if (resumed && queued - resumed < 30000000000ull) length = length < 80000000000ull ? length * 2 : length;
+        else length = 5000000000ull;
+        held = 1, until = queued + length;
+        vk_framegen_hold(1);
+        rt_log("frame generation: held for %.0f s, the game was at %.1f fps with it", length / 1e9, 1e9 / (double)ema);
+    } else if (queued >= until && !slow) {
+        held = 0, resumed = queued;
+        ema = 1000000000ull / 60;
+        vk_framegen_hold(0);
+    }
+}
+
 static void present_main(void *arg) {
     (void)arg;
     perf_core_thread(PCORE_PRESENT);
@@ -156,6 +186,7 @@ static void present_main(void *arg) {
             if (d >= 4000000 && d <= 50000000) period = (period * 7 + d) / 8;
         }
         last_at = j.at;
+        hold_generation(j.queued);
         uint64_t t0 = kern_now_ns(), t1;
         if (gen) {
             t1 = present_generated(gen, j.at, period, vk_framegen_pictures(period));

@@ -42,7 +42,9 @@
 # game's frame rate, rounded down (5 on a 300 Hz monitor at 60 fps, 9 on 540 Hz, 2 on 144 Hz). The game keeps its own
 # frame rate and logic (60 fps in Splatoon 3, whose world steps one tick per frame); in between, the present shows
 # pictures made from the last two game frames and the motion found between them (frame_gen_hud below says what
-# happens to the HUD). More pictures than the monitor shows only cost GPU time. Only the screen changes, never the
+# happens to the HUD). More pictures than the monitor shows only cost GPU time: with limit, the number never exceeds
+# the monitor's rate over 60. While the game itself runs under 55 fps the pictures in between are held (5 s, then
+# longer if it happens again), so they never slow the game. Only the screen changes, never the
 # game's state, so online play is the same. While it is on, FSR 4 / 3.1 is left out (FSR 1 and the blit still scale).
 # Takes effect at once. Experimental.
 # frame_gen = limit

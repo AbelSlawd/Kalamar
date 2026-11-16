@@ -107,6 +107,7 @@ static struct {
     double log_hud;                                  // and the sum of their HUD's share of the picture
     unsigned seen;                // cfg_version the settings below were read at
     int factor, extrap;           // TOTK_FRAME_GEN (0: display), TOTK_FRAME_GEN_MODE = extrap
+    int by_limit, cap_logged;     // the factor comes from the frame limit; its cap by the monitor was logged
     int last_k;                   // pictures per game frame of the latest game frame shown
 } G = {.seen = ~0u, .newest = -1, .prev = {-1, -1, -1}, .encode = 1};
 
@@ -274,6 +275,8 @@ static void read_settings(void) {
     if (v == G.seen) return;
     G.seen = v;
     G.factor = setting_factor();
+    const char *f = cfg_value("TOTK_FRAME_GEN");
+    G.by_limit = !f || !*f || !strcmp(f, "limit");
     const char *m = cfg_value("TOTK_FRAME_GEN_MODE");
     G.extrap = m && !strcmp(m, "extrap");
 }
@@ -281,13 +284,34 @@ static void read_settings(void) {
 // The pictures per game frame for a game period of period_ns: the setting, or for display the monitor's refresh
 // rate over the game's frame rate, rounded down (a 540 Hz monitor at 60 fps: 9; 144 Hz: 2), 1 when the rate is not
 // known yet.
+// A factor that comes from the frame limit never exceeds what the monitor shows: a limit of 120 on a 60 Hz monitor
+// would make a picture per game frame that no refresh displays, and its cost slows a loaded game. A number given in
+// TOTK_FRAME_GEN is kept as it is. Not capped while the monitor's rate is unknown.
+static int cap_to_monitor(int k) {
+    double hz = gfx_window_refresh_hz();
+    if (!G.by_limit || hz <= 0) return k;
+    int most = (int)(hz / 60 + 0.05);
+    if (most < 1) most = 1;
+    if (k <= most) return k;
+    if (!G.cap_logged++)
+        rt_log("frame generation: the frame limit asks for x%d, the %.0f Hz monitor shows x%d", k, hz, most);
+    return most;
+}
+
+// The present thread's hold (vk_backend.c, hold_generation): 1 while the game misses its own frame rate, when the
+// pictures in between would be paid for with game frames. Any thread reads it.
+static int g_hold;
+
+void vk_framegen_hold(int on) { __atomic_store_n(&g_hold, on, __ATOMIC_RELAXED); }
+
 int vk_framegen_pictures(uint64_t period_ns) {
     read_settings();
+    if (__atomic_load_n(&g_hold, __ATOMIC_RELAXED)) return G.last_k = 1;
     int k = G.factor;
     if (!k) {
         double hz = gfx_window_refresh_hz();
         k = hz > 0 ? (int)(hz * (double)period_ns / 1e9 + 0.05) : 1;   // 0.05: a period measured a little short
-    }
+    } else k = cap_to_monitor(k);
     k = k < 1 ? 1 : k > FG_MAX ? FG_MAX : k;
     G.last_k = k;
     return k;
@@ -295,7 +319,8 @@ int vk_framegen_pictures(uint64_t period_ns) {
 
 int vk_framegen_factor(void) {
     read_settings();
-    return G.factor ? G.factor : vk_framegen_pictures(1000000000ull / 60);
+    if (__atomic_load_n(&g_hold, __ATOMIC_RELAXED)) return 1;
+    return G.factor ? cap_to_monitor(G.factor) : vk_framegen_pictures(1000000000ull / 60);
 }
 
 int vk_framegen_extrapolates(void) {
