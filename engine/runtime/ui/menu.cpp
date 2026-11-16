@@ -42,6 +42,7 @@ extern "C" {
 #include "brand.h"
 #include "cheats.h"
 #include "cfg.h"
+extern "C" float vk_framegen_shown_rate(int *factor);   // vk_framegen.c (vk.h)
 #include "fs.h"
 #include "input.h"
 #include "input_map.h"
@@ -2110,6 +2111,15 @@ static void perf_full_draw(const MenuTarget *t, float scale) {
         perf_cell(UI_MENU_OV_FMT_FPS, s.fps);
         perf_cell(UI_MENU_OV_LOW1, s.low1_fps);
         perf_cell(UI_MENU_OV_LOW01, s.low01_fps);
+        // with frame generation, the pictures on the screen per second (the row above counts the game's frames)
+        int factor = 0;
+        float shown = vk_framegen_shown_rate(&factor);
+        if (shown >= 0) {
+            perf_label(UI_MENU_OV_SHOWN_LABEL, fps_c);
+            perf_cell(UI_MENU_OV_FMT_FPS, shown);
+            perf_cell(UI_MENU_OV_FMT_FACTOR, (float)factor);
+            ImGui::TableNextColumn();
+        }
         perf_label(UI_MENU_OV_FRAME_LABEL, fps_c);
         perf_cell(UI_MENU_OV_FRAME_MS, s.frame_ms_avg);
         perf_cell(UI_MENU_OV_MAX_MS, s.frame_ms_max);

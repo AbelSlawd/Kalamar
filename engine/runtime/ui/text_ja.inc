@@ -393,6 +393,7 @@
     [UI_MENU_OV_FPS] = "%.0f FPS", [UI_MENU_OV_FRAME_MS] = "%.1f ms", [UI_MENU_OV_GAME_PCT] = "ゲーム %.0f%%",
     [UI_MENU_OV_MAX_MS] = "最大 %.1f ms",
     [UI_MENU_OV_FPS_LABEL] = "FPS", [UI_MENU_OV_FRAME_LABEL] = "フレーム", [UI_MENU_OV_FMT_FPS] = "%.0f",
+    [UI_MENU_OV_SHOWN_LABEL] = "表示", [UI_MENU_OV_FMT_FACTOR] = "x%.0f",
     [UI_MENU_OV_LOW1] = "1%% 低 %.0f", [UI_MENU_OV_LOW01] = "0.1%% 低 %.0f",
     [UI_MENU_OV_GPU] = "GPU", [UI_MENU_OV_CPU] = "CPU", [UI_MENU_OV_RAM] = "RAM", [UI_MENU_OV_VRAM] = "VRAM",
     [UI_MENU_OV_TEMP] = "温度", [UI_MENU_OV_POWER] = "電力", [UI_MENU_OV_CLOCK] = "クロック",
